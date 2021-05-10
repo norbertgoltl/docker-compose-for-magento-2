@@ -59,15 +59,18 @@ services:
       - cluster.name=es-cluster
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - node.name=elasticsearch
       - cluster.initial_master_nodes=elasticsearch
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - ./src/es_data:/usr/share/elasticsearch/data
-      - ./src/es_log:/var/log/elasticsearch
+      - ./src/services/es_data:/usr/share/elasticsearch/data
+      - ./src/services/es_log:/var/log/elasticsearch
+    ports:
+      - 9200:9200
     networks:
       - magento
 
