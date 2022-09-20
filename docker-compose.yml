@@ -9,9 +9,11 @@ services:
       - phpfpm
       - redis:cache
     volumes:
-      - ./src/magento:/var/www/html
-      - ./src/sock_data:/sock
-      - ./src/nginx_log:/var/log/nginx
+      - ./magento:/var/www/html
+      - ./services/sock_data:/sock
+      - ./services/nginx_log:/var/log/nginx
+      #- ./frontend/${FRONTEND_VENDOR_NAME}:/var/www/html/app/design/frontend/${FRONTEND_VENDOR_NAME}
+      #- ./backend/${BACKEND_VENDOR_NAME}:/var/www/html/app/code/${BACKEND_VENDOR_NAME}
     networks:
       - magento
 
@@ -22,9 +24,11 @@ services:
       - db
     volumes:
       - ./.docker/php/${PHP_VERSION}/.composer:/var/www/.composer
-      - ./src/magento:/var/www/html
-      - ./src/phpfpm_log:/var/log
-      - ./src/sock_data:/sock
+      - ./magento:/var/www/html
+      - ./services/sock_data:/sock
+      - ./services/phpfpm_log:/var/log
+      #- ./frontend/${FRONTEND_VENDOR_NAME}:/var/www/html/app/design/frontend/${FRONTEND_VENDOR_NAME}
+      #- ./backend/${BACKEND_VENDOR_NAME}:/var/www/html/app/code/${BACKEND_VENDOR_NAME}
     networks:
       - magento
 
@@ -32,7 +36,7 @@ services:
     image: redis:${REDIS_VERSION}
     restart: on-failure:5
     volumes:
-      - ./src/redis_data:/data
+      - ./services/redis_data:/data
     expose:
       - 6379
     networks:
@@ -45,11 +49,19 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    command: ["--log_bin_trust_function_creators=1"]
     volumes:
-      - ./src/mysql_data:/var/lib/mysql
-      - ./src/mysql_log:/var/log/mysql
+      - ./services/mysql_data:/var/lib/mysql
+      - ./services/mysql_log:/var/log/mysql
     ports:
       - 3306:3306
+    networks:
+      - magento
+
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
     networks:
       - magento
 
@@ -67,10 +79,21 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - ./src/services/es_data:/usr/share/elasticsearch/data
-      - ./src/services/es_log:/var/log/elasticsearch
+      - ./services/es_data:/usr/share/elasticsearch/data
+      - ./services/es_log:/var/log/elasticsearch
     ports:
       - 9200:9200
+    networks:
+      - magento
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    links:
+      - phpfpm
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - magento
 
